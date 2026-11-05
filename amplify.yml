@@ -8,6 +8,7 @@ applications:
             - npm ci
         build:
           commands:
+            - env | grep -e '^BACKEND_API_URL=' -e '^NEXT_PUBLIC_API_BASE_URL=' >> client/.env.production
             - npm run build
       artifacts:
         baseDirectory: .next
