@@ -1,4 +1,4 @@
-import { Priority, useGetTasksQuery, useUpdateTaskStatusMutation } from "@/src/state/api";
+import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/src/state/api";
 import React from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -58,14 +58,14 @@ const TaskColumn = ({
     const [{ isOver }, drop] = useDrop(() => ({
         accept: "task",
         drop: (item: { id: number }) => moveTask(item.id, status),
-        collect: (monitor: any) => ({
-            isOver: !!monitor.isOver(),
+        collect: (monitor) => ({
+            isOver: monitor.isOver(),
         }),
     }))
 
     const tasksCount = tasks.filter((task) => task.status === status).length;
 
-    const statusColor: any = {
+    const statusColor: Record<string, string> = {
         "To Do": "#2563EB",
         "Work In Progress": "#059669",
         "Under Review": "#D97706",
@@ -121,12 +121,30 @@ type TaskProps = {
     task: TaskType
 }
 
+const PriorityTag = ({ priority }: { priority: TaskType["priority"] }) => (
+    <div
+        className={`rounded-full py-1 text-xs font-semibold ${
+            priority === "Urgent"
+                ? "bg-red-200 text-red-700"
+                : priority === "High"
+                    ? "bg-yellow-200 text-yellow-700"
+                    : priority === "Medium"
+                        ? "bg-green-200 text-green-700"
+                        : priority === "Low"
+                            ? "bg-blue-200 text-blue-700"
+                            : "bg-gray-200 text-gray-700"
+        }`}
+    >
+        {priority}
+    </div>
+);
+
 const Task = ({ task }: TaskProps) => {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: "task",
         item: { id: task.id },
-        collect: (monitor: any) => ({
-            isDragging: !!monitor.isDragging(),
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
         }),
     }))
 
@@ -141,24 +159,6 @@ const Task = ({ task }: TaskProps) => {
         : "";
 
     const numberOfComments = (task.comments && task.comments.length) || 0;
-
-    const PriorityTag = ({ priority }: { priority : TaskType["priority"] }) => (
-        <div 
-            className={`rounded-full py-1 text-xs font-semibold ${
-                priority === "Urgent"
-                    ? "bg-red-200 text-red-700"
-                    : priority === "High"
-                        ? "bg-yellow-200 text-yellow-700"
-                        : priority === "Medium"
-                            ? "bg-green-200 text-green-700"
-                            : priority === "Low"
-                                ? "bg-blue-200 text-blue-700"
-                                : "bg-gray-200 text-gray-700"
-            }`}
-        >
-            {priority}
-        </div>
-    )
 
     return (
         <div

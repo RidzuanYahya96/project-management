@@ -1,7 +1,5 @@
 import ProjectClient from "./ProjectClient";
 
-export const instant = false;
-
 type Props = {
   params: Promise<{ id: string }>;
 };

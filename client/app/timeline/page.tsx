@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAppSelector } from "@/app/redux";
@@ -5,11 +6,13 @@ import Header from "@/src/components/Header";
 import { useGetProjectsQuery } from "@/src/state/api";
 import {
     Gantt,
-    ViewMode,
-    type Task,
-} from "gantt-task-react";
-import "gantt-task-react/dist/index.css";
+    Willow,
+    WillowDark,
+    type ITask,
+} from "@svar-ui/react-gantt";
 import React, { useMemo, useState } from "react";
+
+type ViewMode = "day" | "week" | "month";
 
 const TimelineView = () => {
     const isDarkMode = useAppSelector(
@@ -19,24 +22,22 @@ const TimelineView = () => {
     const {
         data: projects,
         isLoading,
-        isError
+        isError,
     } = useGetProjectsQuery();
 
-    const [viewMode, setViewMode] = useState<ViewMode>(
-        ViewMode.Month
-    );
+    const [viewMode, setViewMode] = useState<ViewMode>("month");
 
-    const ganttTasks: Task[] = useMemo(() => {
+    const ganttTasks: ITask[] = useMemo(() => {
         return (projects ?? [])
             .filter((project) => project.startDate && project.endDate)
             .map((project) => ({
+                id: `Project-${project.id}`,
+                text: project.name,
                 start: new Date(project.startDate!),
                 end: new Date(project.endDate!),
-                name: project.name,
-                id: `Project-${project.id}`,
-                type: "project" as const,
+                type: "summary",
                 progress: 50,
-                isDisabled: false,
+                open: true,
             }))
             .filter(
                 (project) =>
@@ -46,28 +47,37 @@ const TimelineView = () => {
             );
     }, [projects]);
 
-    const listCellWidth = useMemo(() => {
+    const scales = useMemo(() => {
+        if (viewMode === "day") {
+            return [
+                { unit: "month" as const, step: 1, format: "MMMM yyyy" },
+                { unit: "day" as const, step: 1, format: "d" },
+            ];
+        }
+
+        if (viewMode === "week") {
+            return [
+                { unit: "month" as const, step: 1, format: "MMMM yyyy" },
+                { unit: "week" as const, step: 1, format: "w" },
+            ];
+        }
+
+        return [
+            { unit: "year" as const, step: 1, format: "yyyy" },
+            { unit: "month" as const, step: 1, format: "MMMM" },
+        ];
+    }, [viewMode]);
+
+    const gridWidth = useMemo(() => {
         const longestName = Math.max(
             0,
-            ...ganttTasks.map((project) => project.name.length)
+            ...ganttTasks.map((project) => (project.text ?? "").length)
         );
 
-        // Estimate 8px per character, plus padding
-        const nameWidth = longestName * 8 + 40;
-
-        // Reserve space for From and To date columns
-        const dateColumnsWidth = 260;
-
-        const totalWidth = nameWidth + dateColumnsWidth;
-
-        return `${Math.min(Math.max(totalWidth, 350), 800)}px`;
+        return Math.min(Math.max(longestName * 8 + 40, 350), 800);
     }, [ganttTasks]);
 
-    const handleViewModeChange = (
-        event: React.ChangeEvent<HTMLSelectElement>
-    ) => {
-        setViewMode(event.target.value as ViewMode);
-    };
+    const Theme = isDarkMode ? WillowDark : Willow;
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -82,41 +92,41 @@ const TimelineView = () => {
             <header className="mb-4 flex items-center justify-between">
                 <Header name="Projects Timeline" />
 
-                <div className="relative inline-block w-64">
-                    <select
-                        className="block w-full appearance-none rounded border border-gray-400 bg-white px-4 py-2 pr-8 shadow dark:border-dark-secondary dark:bg-dark-secondary dark:text-white"
-                        value={viewMode}
-                        onChange={handleViewModeChange}
-                    >
-                        <option value={ViewMode.Day}>Day</option>
-                        <option value={ViewMode.Week}>Week</option>
-                        <option value={ViewMode.Month}>Month</option>
-                    </select>
-                </div>
+                <select
+                    className="w-64 rounded border border-gray-400 bg-white px-4 py-2 shadow dark:border-dark-secondary dark:bg-dark-secondary dark:text-white"
+                    value={viewMode}
+                    onChange={(event) =>
+                        setViewMode(event.target.value as ViewMode)
+                    }
+                >
+                    <option value="day">Day</option>
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                </select>
             </header>
 
             <div className="overflow-hidden rounded-md bg-white shadow dark:bg-dark-secondary dark:text-white">
                 <div className="timeline">
                     {ganttTasks.length > 0 ? (
-                        <Gantt
-                            tasks={ganttTasks}
-                            viewMode={viewMode}
-                            locale="en-US"
-                            columnWidth={
-                                viewMode === ViewMode.Month
-                                    ? 150
-                                    : viewMode === ViewMode.Week
-                                    ? 250
-                                    : 60
-                            }
-                            listCellWidth="175px"
-                            projectBackgroundColor={isDarkMode ? "#101214" : "#1f2937"}
-                            projectProgressColor={isDarkMode ? "#1f2937" : "#aeb8c2"}
-                            projectProgressSelectedColor={isDarkMode ? "#000" : "#9ba1a6"}
-                        />
+                        <Theme>
+                            <Gantt
+                                tasks={ganttTasks}
+                                scales={scales}
+                                cellWidth={
+                                    viewMode === "month"
+                                        ? 150
+                                        : viewMode === "week"
+                                        ? 100
+                                        : 60
+                                }
+                                gridWidth={gridWidth}
+                                cellHeight={44}
+                                autoScale
+                            />
+                        </Theme>
                     ) : (
                         <p className="p-4">
-                            No tasks with valid start and due dates found.
+                            No projects with valid start and end dates found.
                         </p>
                     )}
                 </div>
