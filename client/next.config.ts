@@ -7,6 +7,18 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "pm-s3-image1.s3.ap-southeast-2.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
+
   turbopack: {
     rules: {
       "*.css": {
