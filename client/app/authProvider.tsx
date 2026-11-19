@@ -11,7 +11,7 @@ Amplify.configure({
             userPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || "",
             userPoolClientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID || "",
         },
-    },        
+    },
 })
 
 const formFields = {
@@ -46,11 +46,12 @@ const formFields = {
     },
 };
 
-const AuthProvider = ({ children }: any) => {
+//const AuthProvider = ({ children }: any) => {
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return (
         <div className="mt-5">
             <Authenticator formFields={formFields}>
-                {({ user }: any)  => 
+                {({ user }) =>
                     user ? (
                         <div>{children}</div>
                     ) : (
@@ -64,4 +65,4 @@ const AuthProvider = ({ children }: any) => {
     )
 }
 
-export default AuthProvider; 
+export default AuthProvider;

@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery, type FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 
 export interface Project {
@@ -96,14 +96,21 @@ export const api = createApi({
                     const session = await fetchAuthSession();
                     if (!session) throw new Error("No session found");
                     const { userSub } = session;
-                    const { accessToken } = session.tokens ?? {};
+                    //const { accessToken } = session.tokens ?? {};
 
                     const userDetailsResponse = await fetchWithBQ(`users/${userSub}`);
                     const userDetails = userDetailsResponse.data as User;
 
                     return { data: { user, userSub, userDetails }};
-                } catch (error: any) {
-                    return { error: error.message || "Could not fetch user data"};
+                } catch (error: unknown) {
+                    return {
+                        error: {
+                            status: "CUSTOM_ERROR",
+                            error: error instanceof Error
+                                ? error.message
+                                : "Could not fetch user data",
+                        } satisfies FetchBaseQueryError,
+                    };
                 }
             }
         }),
