@@ -16,6 +16,32 @@ export const getUsers = async (
     }
 };
 
+export const getUser = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    const { cognitoId } = req.params;
+
+    if (typeof cognitoId !== "string") {
+        res.status(400).json({ message: "Invalid Cognito ID" });
+        return;
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                cognitoId,
+            },
+        });
+
+        res.json(user);
+    } catch (error: any) {
+        res.status(500).json({
+            message: `Error retrieving user: ${error.message}`,
+        });
+    }
+};
+
 export const postUser = async (req: Request, res: Response) => {
     try {
         const {
