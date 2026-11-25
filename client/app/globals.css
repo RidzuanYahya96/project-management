@@ -88,3 +88,8 @@ body,
   align-items: center;
   justify-content: center;
 }
+
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
